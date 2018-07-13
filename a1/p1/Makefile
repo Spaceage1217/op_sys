@@ -7,7 +7,7 @@ cflags=-Wall -Werror -g
 
 exec: $(file1) $(file2)
 	./$<
-	./$^
+	./$(word 2,$^)
 
 test: exec clean
 
