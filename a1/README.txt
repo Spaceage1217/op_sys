@@ -7,6 +7,8 @@ How to run:
   run, and then remove the object and executable files from your computer.
   c. You can run each problem individually. A Makefile has been provided in a1: problem1-3.
   d. Run "make" or "make test" inside each problem directory you want to test.
+  To remove files: You can run "make clean" in any directory to remove the executable and object files from 
+  that directory.
 2. Manually
   a. Problem 1
     Build: 

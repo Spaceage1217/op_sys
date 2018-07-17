@@ -1,4 +1,4 @@
-.PHONY: test_all clean
+.PHONY: test clean
 
 build:
 	+$(MAKE) -C problem1
