@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 static int ENTRIES = 20;
 
@@ -32,6 +33,12 @@ void printInput(char **buffer);
 */
 void sort(char **buffer, int n);
 
+/*
+  swap:
+    Swap the position of the two character strings.
+*/
+void swap(char **a, char **b);
+
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +57,7 @@ int main(int argc, char *argv[])
     if (buffer[i])
       free(buffer[i]);
   free(buffer);
-  
+
   exit(EXIT_SUCCESS);
 }
 
@@ -87,14 +94,26 @@ void printInput(char **buffer)
 
 void sort(char **buffer, int n)
 {
-  char t[500];
+  int cmpVal;
   for (int i = 0; i < n; i++)
     for (int j = i + 1; j < n; j++)
-      if (strcasecmp(buffer[i], buffer[j]) > 0)
-      {
-        strcpy(t, buffer[j]);
-        strcpy(buffer[j], buffer[i]);
-        strcpy(buffer[i], t);
-      }
-  return;
+    {
+      cmpVal = strcasecmp(buffer[i], buffer[j]);
+      // > 0 indicates the string i is higher ascending than j
+      if (cmpVal > 0)
+        swap(&buffer[i], &buffer[j]);
+      // == 0 indicates the strings are equal w/o checking 
+      // case-sensitivity
+      else if (cmpVal == 0)
+        // Only swap if the the char string is upper
+        if (isupper(buffer[i][0]))
+          swap(&buffer[i], &buffer[j]);
+    }
+}
+
+void swap(char **a, char **b)
+{
+  char *temp = *a;
+  *a = *b;
+  *b = temp;
 }
