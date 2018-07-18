@@ -54,24 +54,24 @@ void getInput(char **buffer)
   while (1)
   {
     int examCount;
-    printf("Enter a name (Ctrl-D to terminate the input):\t");
+    //printf("Enter a name (Ctrl-D to terminate the input):\t");
     // Quit if we're done or before we run off the array
     if (i >= ENTRIES)
     {
-      printf("All entries filled. Exiting from input.");
+      //printf("All entries filled. Exiting from input.");
       break;
     }
     if (getline(&line, &size, stdin) == EOF)
       break;
 
-    printf("Enter the number of courses:\t");
+    //printf("Enter the number of courses:\t");
     scanf("%d", &examCount);
     while (fgetc(stdin) != '\n')
       ; // Read until a newline is found
 
     if (examCount > 12)
     {
-      printf("Max number of courses is 12. Please try again.\n");
+      //printf("Max number of courses is 12. Please try again.\n");
       continue;
     }
 
@@ -90,7 +90,7 @@ void getInput(char **buffer)
 
 void printInput(char **buffer)
 {
-  printf("Printing students with 5 or more courses:\n");
+  //printf("Printing students with 5 or more courses:\n");
   int i = 0;
   while (buffer[i] != NULL)
     printf("%s\n", buffer[i++]);

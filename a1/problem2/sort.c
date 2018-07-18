@@ -69,7 +69,7 @@ int getInput(char **buffer)
   char *line;
   while (1)
   {
-    printf("Enter a name (Ctrl-D to terminate the input):\t");
+    //printf("Enter a name (Ctrl-D to terminate the input):\t");
     if (getline(&line, &size, stdin) == EOF || i >= ENTRIES)
       break;
 
@@ -80,7 +80,7 @@ int getInput(char **buffer)
     buffer[i] = (char *)malloc(sizeof(char) * (size + 10));
     strncpy(buffer[i++], line, size);
   }
-  printf("\n");
+  //printf("\n");
   return i;
 }
 
@@ -90,7 +90,7 @@ void printInput(char **buffer)
   int i = 0;
   while (buffer[i] != NULL)
     printf("%s\n", buffer[i++]);
-  printf("\n");
+  //printf("\n");
 }
 
 void sort(char **buffer, int n)
