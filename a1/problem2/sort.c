@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
 {
   // Get memory for the array of char arrays
   char **buffer = (char **)malloc(ENTRIES * sizeof(char *));
-  for (int i = 0; i < ENTRIES; i++)
+  int i;
+  for (i = 0; i < ENTRIES; i++)
     buffer[i] = NULL;
 
   // Get input, sort, and then print
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
   printInput(buffer);
 
   // Free memory
-  for (int i = 0; i < ENTRIES; i++)
+  for (i = 0; i < ENTRIES; i++)
     if (buffer[i])
       free(buffer[i]);
   free(buffer);
@@ -96,8 +97,9 @@ void printInput(char **buffer)
 void sort(char **buffer, int n)
 {
   int cmpVal;
-  for (int i = 0; i < n; i++)
-    for (int j = i + 1; j < n; j++)
+  int i, j;
+  for (i = 0; i < n; i++)
+    for (j = i + 1; j < n; j++)
     {
       cmpVal = strcasecmp(buffer[i], buffer[j]);
       // > 0 indicates the string i is higher ascending than j

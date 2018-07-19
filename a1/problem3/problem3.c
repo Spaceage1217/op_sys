@@ -1,5 +1,5 @@
 /*
-  Assignment 1: Problem 1
+  Assignment 1: Problem 3
   problem3.c
   Developer: Michael Scales
   Operating Systems
@@ -28,7 +28,8 @@ int main(int argc, char *argv[])
   }
 
   // Shift arguments -> remove the parent's executable
-  for (int i = 1; i < argc; i++)
+  int i;
+  for (i = 1; i < argc; i++)
     argv[i - 1] = argv[i];
 
   int status = processRunner(argv[0], argv);
@@ -52,6 +53,7 @@ int processRunner(char *command, char **arguments)
 
   if ((pid = fork()) == 0)
   {
+    printf("Executing child process. PID: %ld.\n", (long)getpid());
     ret = execvp(command, arguments);
     // Should not get here
     if (ret != 0)
@@ -61,6 +63,7 @@ int processRunner(char *command, char **arguments)
   else if (pid > 0)
   {
     // Parent waits for process to complete.
+    printf("Waiting for child process in parent. PID: %ld.\n", (long)getppid());
     wait(&status);
     ret = WEXITSTATUS(status);
   }

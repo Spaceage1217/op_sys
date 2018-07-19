@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
 {
   // Get memory for the array of char arrays
   char **buffer = (char **)malloc(ENTRIES * sizeof(char *));
-  for (int i = 0; i < ENTRIES; i++)
+  int i;
+  for (i = 0; i < ENTRIES; i++)
     buffer[i] = NULL;
 
   // Get input, prune names with courses <5, and print
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
   printInput(buffer);
 
   // Free memory
-  for (int i = 0; i < ENTRIES; i++)
+  for (i = 0; i < ENTRIES; i++)
     if (buffer[i])
       free(buffer[i]);
   free(buffer);
