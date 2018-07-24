@@ -1,5 +1,6 @@
 /*			Lab 2 Partial Example			*/
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -8,27 +9,51 @@
 #include <string.h>
 #include <unistd.h>
 
+static int MAX_ARGS = 50;
+
+void tokenize(char *line, char **args, int *pipeCnt);
+void findInput(char *arg, char *inFile);
+void findOutput(char *arg, char *outFile);
+void trim(char *str);
+
 int main()
 {
-  //char *path, *argv[20], buf[80], n, *p;
-  //int status;
   size_t size;
+  int i;
   char *line;
-  //bool m, inword, continu;
+  char buf[256];
+  bool redir_out, redir_in;
+  char **args = (char **)malloc(MAX_ARGS * sizeof(char *));
+  int pipeCnt;
+  for (i = 0; i < MAX_ARGS; i++)
+    args[i] = NULL;
 
   while (1)
   {
-    char s[256];
+    // Init
+    redir_in = redir_out = false;
+    pipeCnt = 0;
+
+    // Get line and process exit conitions
     printf("\nshhh> ");
-    if (getline(&line, &size, stdin) == EOF) break;
-    strcpy(s, line);
-    char* token = strtok(s, " ");
-    printf("Got words:");
-    while (token) {
-        printf("token: %s\n", token);
-        token = strtok(NULL, " ");
+    if (getline(&line, &size, stdin) == EOF)
+      break;
+    if (strncasecmp(line, "exit", 4) == 0)
+      break;
+
+    // Get piped arguments
+    strcpy(buf, line);
+    tokenize(buf, args, &pipeCnt);
+
+    for (i = 0; i < pipeCnt; i++)
+    {
+      printf("%s\n", args[i]);
     }
-    break;
+    // while (token) {
+    //     printf("token: %s\n", token);
+    //     token = strtok(NULL, " ");
+    // }
+    // printf("words");
     //printf("Parsing string: %s %s\n", argv[0], argv[1]);
   }
   // while (1)
@@ -84,5 +109,61 @@ int main()
   //   }
   //   wait(&status);
   // }
+  for (i = 0; i < MAX_ARGS; i++)
+  {
+    if (args[i])
+    {
+      //printf("%s\n", args[i]);
+      free(args[i]);
+    }
+  }
+  free(args);
   exit(EXIT_SUCCESS);
+}
+
+void tokenize(char *line, char **args, int *pipeCnt)
+{
+  int i = 0,
+      size;
+  char *cmd = strtok(line, "|");
+
+  while (cmd != NULL && i < MAX_ARGS)
+  {
+    trim(cmd);
+    size = strlen(cmd);
+    args[i] = (char *)malloc(size * sizeof(char));
+    strncpy(args[i++], cmd, size);
+    cmd = strtok(NULL, "|");
+  }
+
+  *pipeCnt = i;
+  // Ignore stale args
+  args[i] = NULL;
+}
+
+void findInput(char *arg, char *inFile)
+{
+  // char *match;
+  // int len = strlen(inFile);
+  // while ((match = strstr(string, sub))) {
+  //     *match = '\0';
+  //     strcat(string, match+len);
+  // }
+}
+
+void trim(char *str)
+{
+  if (!str)
+    return;
+
+  char *ptr = str;
+  int len = strlen(ptr);
+
+  while (len - 1 > 0 && isspace(ptr[len - 1]))
+    ptr[--len] = 0;
+
+  while (*ptr && isspace(*ptr))
+    ++ptr, --len;
+
+  memmove(str, ptr, len + 1);
 }
