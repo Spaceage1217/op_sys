@@ -11,28 +11,32 @@
 
 static int MAX_ARGS = 50;
 
-void tokenize(char *line, char **args, int *pipeCnt);
-void findInput(char *arg, char *inFile);
+void tokenize(char *line, char **args, int *procCount);
+void findRedirect(char *arg, char *reFile, char *delim);
 void findOutput(char *arg, char *outFile);
 void trim(char *str);
 
 int main()
 {
-  size_t size;
   int i;
+  int procCount;
+  // int left_fd[2];
+  // int right_fd[2];
+  bool redir_out, redir_in;
   char *line;
   char buf[256];
-  bool redir_out, redir_in;
   char **args = (char **)malloc(MAX_ARGS * sizeof(char *));
-  int pipeCnt;
   for (i = 0; i < MAX_ARGS; i++)
     args[i] = NULL;
+
+  size_t size;
+  pid_t pid;
 
   while (1)
   {
     // Init
     redir_in = redir_out = false;
-    pipeCnt = 0;
+    procCount = 0;
 
     // Get line and process exit conitions
     printf("\nshhh> ");
@@ -43,18 +47,47 @@ int main()
 
     // Get piped arguments
     strcpy(buf, line);
-    tokenize(buf, args, &pipeCnt);
+    tokenize(buf, args, &procCount);
 
-    for (i = 0; i < pipeCnt; i++)
+    char infile[256];
+    findRedirect(args[0], infile, "<");
+    if (infile != NULL) redir_in = true;
+
+    char outfile[256];
+    findRedirect(args[procCount - 1], outfile, ">");
+    if (outfile != NULL) redir_out = true;
+
+    for (i = 0; i < procCount; i++)
     {
-      printf("%s\n", args[i]);
+      if (procCount > 1) {
+        printf("has pipes\n");
+        // pipe(left_fd);
+        // pipe(right_fd);
+      }
+      else printf("single process\n");
+
+      // Proc area
+      if((pid = fork()) > 0) {
+        if (i > 0) {
+          // middle children stuff
+          // close(left_fd[0]);
+          // close(left_fd[1]);
+          printf("closing left pipes for middle processes\n");
+        }
+        // left_fd[0] = right_fd[0];
+        // left_fd[1] = right_fd[1];
+        // parent stuff
+        printf("executing parent arg\n", args[i]);
+        wait(NULL);
+        printf("next process\n");
+      } else if (pid == 0) {
+        printf("child stuff\n");
+        // Manage files for redirection
+        if (i == 0 && infile && redir_in) printf("Input: %s\n", infile);
+        if (i == procCount - 1 && outfile && redir_out) printf("Output: %s\n", outfile);
+        exit(EXIT_SUCCESS);
+      } else perror("Something broke");
     }
-    // while (token) {
-    //     printf("token: %s\n", token);
-    //     token = strtok(NULL, " ");
-    // }
-    // printf("words");
-    //printf("Parsing string: %s %s\n", argv[0], argv[1]);
   }
   // while (1)
   // {
@@ -110,18 +143,13 @@ int main()
   //   wait(&status);
   // }
   for (i = 0; i < MAX_ARGS; i++)
-  {
     if (args[i])
-    {
-      //printf("%s\n", args[i]);
       free(args[i]);
-    }
-  }
   free(args);
   exit(EXIT_SUCCESS);
 }
 
-void tokenize(char *line, char **args, int *pipeCnt)
+void tokenize(char *line, char **args, int *procCount)
 {
   int i = 0,
       size;
@@ -136,20 +164,30 @@ void tokenize(char *line, char **args, int *pipeCnt)
     cmd = strtok(NULL, "|");
   }
 
-  *pipeCnt = i;
+  *procCount = i;
   // Ignore stale args
   args[i] = NULL;
 }
 
-void findInput(char *arg, char *inFile)
+void findRedirect(char *arg, char *reFile, char *delim)
 {
-  // char *match;
-  // int len = strlen(inFile);
-  // while ((match = strstr(string, sub))) {
-  //     *match = '\0';
-  //     strcat(string, match+len);
-  // }
+  //printf("Testing: %s\n", arg);
+  char *match = strtok(arg, delim);
+  if (match != NULL)
+  {
+    trim(match);
+    // printf("arg: %s\n", match);
+    strcpy(arg, match);
+  } else return;
+  
+  match = strtok(NULL, " ");
+  if (match != NULL) {
+    trim(match);
+    // printf("infile: %s\n", match);
+    strcpy(reFile, match);
+  }
 }
+
 
 void trim(char *str)
 {
