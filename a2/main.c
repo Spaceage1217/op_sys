@@ -18,13 +18,14 @@ void trim(char *str);
 
 int main()
 {
-  int i;
-  int procCount;
+  int i, status, procCount;
   // int left_fd[2];
   // int right_fd[2];
   bool redir_out, redir_in;
   char *line;
   char buf[256];
+  char infile[256];
+  char outfile[256];
   char **args = (char **)malloc(MAX_ARGS * sizeof(char *));
   for (i = 0; i < MAX_ARGS; i++)
     args[i] = NULL;
@@ -37,6 +38,8 @@ int main()
     // Init
     redir_in = redir_out = false;
     procCount = 0;
+    infile[0] = '\0';
+    outfile[0] = '\0';
 
     // Get line and process exit conitions
     printf("\nshhh> ");
@@ -49,99 +52,57 @@ int main()
     strcpy(buf, line);
     tokenize(buf, args, &procCount);
 
-    char infile[256];
     findRedirect(args[0], infile, "<");
-    if (infile != NULL) redir_in = true;
+    if (infile[0] != '\0') redir_in = true;
 
-    char outfile[256];
     findRedirect(args[procCount - 1], outfile, ">");
-    if (outfile != NULL) redir_out = true;
+    if (outfile[0] != '\0') redir_out = true;
+
+    // If pipes exist
+    if (procCount > 1) {
+      printf("has pipes\n");
+      // if (pipe(left_fd) < 0)
+      //   exit(EXIT_FAILURE);
+      // if (pipe(right_fd) < 0)
+      //   exit(EXIT_FAILURE);
+    }
+    else printf("single process\n");
 
     for (i = 0; i < procCount; i++)
     {
-      if (procCount > 1) {
-        printf("has pipes\n");
-        // pipe(left_fd);
-        // pipe(right_fd);
-      }
-      else printf("single process\n");
-
       // Proc area
       if((pid = fork()) > 0) {
         if (i > 0) {
           // middle children stuff
           // close(left_fd[0]);
           // close(left_fd[1]);
-          printf("closing left pipes for middle processes\n");
+          printf("config pipes for mid proc\n");
         }
         // left_fd[0] = right_fd[0];
         // left_fd[1] = right_fd[1];
         // parent stuff
-        printf("executing parent arg\n", args[i]);
-        wait(NULL);
-        printf("next process\n");
+        printf("configured pipes for process\n");
+
+        // Wait for child to finish before starting again
+        if ((waitpid(pid, &status, 0) == pid) && (status != 0))
+          perror("Excuted process.\n");
       } else if (pid == 0) {
-        printf("child stuff\n");
+        
         // Manage files for redirection
-        if (i == 0 && infile && redir_in) printf("Input: %s\n", infile);
-        if (i == procCount - 1 && outfile && redir_out) printf("Output: %s\n", outfile);
-        exit(EXIT_SUCCESS);
+        if (i == 0 && redir_in) {
+          printf("Input: %s\n", infile);
+        }
+        if (i == procCount - 1 && redir_out) {
+          printf("Output: %s\n", outfile);
+        }
+    
+        char *const argv[2] = { args[i], NULL };
+        execvp(argv[0], argv);
+        // Shouldn't get here
+        fprintf(stderr, "Process { %s } didn't exec.\n", args[i]);
       } else perror("Something broke");
     }
   }
-  // while (1)
-  // {
-  //   inword = false;
-  //   p = buf;
-  //   m = false;
-  //   continu = false;
-
-  //   printf("\nshhh> ");
-
-  //   while ((n = getchar()) != '\n' || continu)
-  //   {
-  //     if (n == ' ')
-  //     {
-  //       if (inword)
-  //       {
-  //         inword = false;
-  //         *p++ = 0;
-  //       }
-  //     }
-
-  //     else if (n == '\n')
-  //       continu = false;
-
-  //     else if (n == '\\' && !inword)
-  //       continu = true;
-
-  //     else
-  //     {
-  //       if (!inword)
-  //       {
-  //         inword = true;
-  //         argv[m++] = p;
-  //         *p++ = n;
-  //       }
-  //       else
-  //         *p++ = n;
-  //     }
-  //   }
-
-  //   *p++ = 0;
-  //   argv[m] = 0;
-  //   printf("Parsing string: %s %s\n", argv[0], argv[1]);
-
-  //   if (strcmp(argv[0], "quit") == 0)
-  //     exit(EXIT_SUCCESS);
-
-  //   if (fork() == 0)
-  //   {
-  //     execvp(argv[0], argv);
-  //     printf(" didn't exec \n ");
-  //   }
-  //   wait(&status);
-  // }
   for (i = 0; i < MAX_ARGS; i++)
     if (args[i])
       free(args[i]);
