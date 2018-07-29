@@ -39,8 +39,8 @@ int main()
     infile[0] = '\0';
     outfile[0] = '\0';
 
-    // Get line and process exit conitions
     printf("\nshhh> ");
+    // Get line and process exit conitions
     if (getline(&line, &size, stdin) == EOF)
       break;
     if (strncasecmp(line, "exit", 4) == 0)
@@ -50,87 +50,115 @@ int main()
     strcpy(buf, line);
     tokenize(buf, args, &procCount);
 
-    if (*args[0] == '\0') continue;
-
+    // Handle redirects
+    if (*args[0] == '\0')
+      continue;
     findRedirect(args[0], infile, "<");
-    if (infile[0] != '\0') redir_in = true;
-
+    if (infile[0] != '\0')
+      redir_in = true;
     findRedirect(args[procCount - 1], outfile, ">");
-    if (outfile[0] != '\0') redir_out = true;
+    if (outfile[0] != '\0')
+      redir_out = true;
 
     for (i = 0; i < procCount; i++)
     {
       // If pipes exist
-      if (procCount > 1) {
-        if (pipe(left_fd) < 0 || pipe(right_fd) < 0)
+      if (procCount > 1)
+        if (pipe(right_fd) < 0)
           exit(EXIT_FAILURE);
-      }
+
+      pid = fork();
 
       // Proc area
-      if((pid = fork()) > 0) {
-        if (i > 0) {
+      if (pid > 0)
+      {
+        if (i > 0)
+        {
           close(left_fd[0]);
           close(left_fd[1]);
         }
         left_fd[0] = right_fd[0];
         left_fd[1] = right_fd[1];
+      }
+      else if (pid == 0)
+      {
+        // Pipes
+        if ((procCount > 1) && (i < procCount))
+        {
+          if (i == 0)
+          {
+            // first process
+            dup2(right_fd[1], 1);
+            close(right_fd[0]);
+            close(right_fd[1]);
+          }
+          else if (i == (procCount - 1))
+          {
+            // last process
+            dup2(left_fd[0], 0);
+            close(left_fd[0]);
+            close(left_fd[1]);
+          }
+          else
+          {
+            // middle processes
+            dup2(left_fd[0], 0);
+            close(left_fd[0]);
+            close(left_fd[1]);
+            dup2(right_fd[1], 1);
+            close(right_fd[0]);
+            close(right_fd[1]);
+          }
+        }
 
-        // Wait for child to finish before proceeding
-        if ((waitpid(pid, &status, 0) == pid) && (status != 0))
-          fprintf(stderr, "Child process failed to execute.\n");
-      } else if (pid == 0) {
-        sleep(1);
         // Input redirection
-        if (i == 0 && redir_in) {
+        if ((i == 0) && redir_in)
+        {
           int fdIn = open(infile, O_RDONLY);
-          if (fdIn < 0) perror(outfile);
+          if (fdIn < 0)
+            perror(outfile);
           dup2(fdIn, 0);
           close(fdIn);
         }
 
-        // Pipes
-        if (i < procCount - 1) {
-          dup2(right_fd[0], 0);
-          dup2(right_fd[1], 1);
+        // Output redirection
+        if ((i == (procCount - 1)) && redir_out)
+        {
+          int fdOut = open(outfile, O_WRONLY | O_TRUNC | O_CREAT, 0755);
+          if (fdOut < 0)
+            perror(outfile);
+          dup2(fdOut, 1);
+          close(fdOut);
         }
 
-        // Output redirection
-        if (i == procCount - 1) {
-          if (redir_out) {
-            int fdOut = open(outfile, O_WRONLY | O_TRUNC | O_CREAT, 0755);
-            if (fdOut < 0) perror(outfile);
-            dup2(fdOut, 1);
-            close(fdOut);
-          } else dup2(right_fd[1], 1);
-        }
-    
-        // Parse arguments
+        // Get current proc arguments
         int argLength = strlen(args[i]);
-        char *argCopy = (char*)malloc(argLength + 1 * sizeof(char));
+        char *argCopy = (char *)malloc(argLength + 1 * sizeof(char));
         strncpy(argCopy, args[i], argLength);
 
-        i = 0;
+        int i = 0;
         char *argv[15] = {};
         char *arg = strtok(argCopy, " ");
-        do {
+        do
+        {
           int subArgLen = strlen(arg);
-          argv[i] = (char*)malloc((subArgLen + 1) * sizeof(char));
+          argv[i] = (char *)malloc((subArgLen + 1) * sizeof(char));
           strncpy(argv[i++], arg, subArgLen);
         } while ((arg = strtok(NULL, " ")) && i < 15);
         argv[i] = NULL;
         free(argCopy);
-        execvp(argv[0], argv);
+
+        execvp(argv[0], (char *const *)argv);
         // Shouldn't get here
         perror(args[i]);
         exit(EXIT_FAILURE);
-      } else perror("Pipe");
-
-      if (procCount > 1) {
-        close(left_fd[0]);
-        close(left_fd[1]);
-        close(right_fd[0]);
-        close(right_fd[1]);
       }
+      else
+        fprintf(stderr, "Error forking process.\n");
+
+      // Wait for child to finish before proceeding
+      if ((waitpid(pid, &status, 0) == pid) && (status != 0))
+        fprintf(stderr, "Child process failed to execute.\n");
     }
   }
   for (i = 0; i < MAX_ARGS; i++)
@@ -167,15 +195,17 @@ void findRedirect(char *arg, char *reFile, char *delim)
   {
     trim(match);
     strcpy(arg, match);
-  } else return;
-  
+  }
+  else
+    return;
+
   match = strtok(NULL, " ");
-  if (match != NULL) {
+  if (match != NULL)
+  {
     trim(match);
     strcpy(reFile, match);
   }
 }
-
 
 void trim(char *str)
 {
