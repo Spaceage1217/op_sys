@@ -3,7 +3,7 @@ target2=threadPartB
 objects=$(target1).o $(target2).o
 cc=gcc
 cflags=-Wall -Werror -g
-ldopts=-pthread
+ldopts=-pthread -lm
 .PHONY: clean test
 
 exec: $(target1) $(target2)

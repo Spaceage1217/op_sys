@@ -1,94 +1,61 @@
 #define _GNU_SOURCE
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <unistd.h>
 #include <pthread.h>
 
-#define TIMES 10
-#define CAPACITY 3
-#define ITEMSIZE 20
+#define SLEEP_INTERVAL 2
+#define CAPACITY 1000
 
-struct Buffer
+struct Manufacturer
 {
-  int item[ITEMSIZE];
-  int size;
+  int itemsGiven;
+  int items;
 };
 
-void *producer();
-void *consumer();
+struct Salesman
+{
+  char name;
+  double takes;
+};
 
-pthread_mutex_t mutex;
-pthread_cond_t full_cond;
-pthread_cond_t empty_cond;
-struct Buffer buffer;
+void *getShirts();
+
+struct Manufacturer mfr;
 
 int main()
 {
-  int i;
-  pthread_t tid;
+  pthread_t tid[3];
 
-  for (i = 0; i < ITEMSIZE; i++)
-    buffer.item[i] = -1;
-  buffer.size = 0;
+  mfr.itemsGiven = 0;
+  mfr.items = CAPACITY;
+  struct Salesman s1 = {'A', 0.33};
+  struct Salesman s2 = {'B', 0.25};
+  struct Salesman s3 = {'C', 0.2};
 
-  pthread_setconcurrency(2);
+  pthread_setconcurrency(3);
 
-  pthread_create(&tid, NULL, (void *(*)(void *))producer, NULL);
-  pthread_create(&tid, NULL, (void *(*)(void *))consumer, NULL);
+  pthread_create(&tid[0], NULL, (void *(*)(void *))getShirts, &s1);
+  pthread_create(&tid[1], NULL, (void *(*)(void *))getShirts, &s2);
+  pthread_create(&tid[2], NULL, (void *(*)(void *))getShirts, &s3);
 
-  pthread_exit(0);
+  for (int i = 0; i < 3; i++)
+       pthread_join(tid[i], NULL);
+  printf("The total number of T-shirts given out it: %d\n", mfr.itemsGiven);
+  exit(EXIT_SUCCESS);
 }
 
-void *producer()
+void *getShirts(struct Salesman *s)
 {
-  int i, j;
-
-  for (j = 0; j < TIMES; j++)
+  while (mfr.items > 0)
   {
-    pthread_mutex_lock(&mutex);
-    if (buffer.size == CAPACITY)
-    {
-      printf("Buffer is full. Producer is waiting...\n");
-      pthread_cond_wait(&full_cond, &mutex);
-    }
-    else
-    {
-      printf("Producer adds one more item ...\n");
-      buffer.size++;
-      buffer.item[buffer.size] = buffer.size;
-      for (i = 0; i < buffer.size; i++)
-        printf("%d ", buffer.item[i]);
-      printf("\n");
-      pthread_cond_broadcast(&empty_cond);
-    }
-    pthread_mutex_unlock(&mutex);
-  }
-  return 0;
-}
-
-void *consumer()
-{
-  int i, j;
-
-  for (j = 0; j < TIMES; j++)
-  {
-    pthread_mutex_lock(&mutex);
-
-    if (buffer.size == 0)
-    {
-      printf("Buffer is empty. Consumer is waiting...\n");
-      pthread_cond_wait(&empty_cond, &mutex);
-    }
-    else
-    {
-      printf("Consumer consumes an item from buffer...\n");
-      buffer.size--;
-      for (i = 0; i < buffer.size; i++)
-        printf("%d ", buffer.item[i]);
-      printf("\n");
-      pthread_cond_broadcast(&full_cond);
-    }
-
-    pthread_mutex_unlock(&mutex);
+    sleep(SLEEP_INTERVAL);
+    int remItems = (int) ceil(mfr.items * s->takes);
+    mfr.items -= remItems;
+    printf("%c takes away %d T-shirts.\n", s->name, remItems);
+    mfr.itemsGiven += remItems;
   }
   return 0;
 }
