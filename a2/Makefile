@@ -1,4 +1,4 @@
-project=a2
+project=lab2
 objects=$(project).o
 cc=gcc
 cflags=-Wall -Werror -g
@@ -18,4 +18,4 @@ $(objects): %.o: %.c
 	$(cc) -c $(cflags) $< -o $@
 
 clean:
-	rm -f $(project) $(objects) *.txt
+	rm -f $(project) $(objects) *.dat
