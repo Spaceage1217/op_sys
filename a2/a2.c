@@ -1,4 +1,9 @@
-/*			Lab 2 Partial Example			*/
+/*
+  Assignment 2
+  a2.c
+  Developer: Michael Scales
+  Operating Systems
+*/
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -12,9 +17,23 @@
 
 static int MAX_ARGS = 50;
 
-void tokenize(char *line, char **args, int *procCount);
+/*  findRedirect:
+ *    Find the file in the arg. Splits the arg on the
+ *    delimiter and assigns the second value from the
+ *    split to the reFile.
+ */
 void findRedirect(char *arg, char *reFile, char *delim);
-void findOutput(char *arg, char *outFile);
+
+/*  tokenize:
+ *    Splits a line on the "|" delimiter. Sets args to 
+ *    the sequence of tokenized arguments. Sets a procCount
+ *    which represents the number of arguments that were split.
+ */
+void tokenize(char *line, char **args, int *procCount);
+
+/*  trim:
+ *    Trim the leading and trailing whitespace from the str.
+ */
 void trim(char *str);
 
 int main()
