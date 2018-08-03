@@ -33,7 +33,7 @@ int main()
 
   struct Salesman s1 = { 0, 'A', 0.33, 1 };
   struct Salesman s2 = { 0, 'B', 0.25, 2 };
-  struct Salesman s3 = { 0, 'C', 0.20, 1 };
+  struct Salesman s3 = { 0, 'C', 0.20, 0 };
 
   pthread_setconcurrency(3);
 
@@ -55,7 +55,7 @@ void *getShirts(struct Salesman *s)
   while (mfr.items > 1)
   {
     int remItems = (int)ceil(mfr.items * s->takes);
-    sleep(s->delay);
+    if (s->delay > 0) sleep(s->delay);
     mfr.items -= remItems;
 
     printf("%c takes away %d T-shirts.\n", s->name, remItems);
