@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define SLEEP_INTERVAL 2
 #define CAPACITY 1000
 
 struct Manufacturer
@@ -20,6 +19,7 @@ struct Salesman
   pthread_t tid;
   char name;
   double takes;
+  int delay;
 };
 
 void *getShirts();
@@ -31,9 +31,9 @@ int main()
   mfr.itemsTaken = 0;
   mfr.items = CAPACITY;
 
-  struct Salesman s1 = { 0, 'A', 0.33 };
-  struct Salesman s2 = { 0, 'B', 0.25 };
-  struct Salesman s3 = { 0, 'C', 0.2 };
+  struct Salesman s1 = { 0, 'A', 0.33, 1 };
+  struct Salesman s2 = { 0, 'B', 0.25, 2 };
+  struct Salesman s3 = { 0, 'C', 0.20, 1 };
 
   pthread_setconcurrency(3);
 
@@ -52,13 +52,14 @@ int main()
 void *getShirts(struct Salesman *s)
 {
   int shirtsTaken = 0;
-  while (mfr.items > 0)
+  while (mfr.items > 1)
   {
     int remItems = (int)ceil(mfr.items * s->takes);
-    shirtsTaken += remItems;
+    sleep(s->delay);
     mfr.items -= remItems;
+
     printf("%c takes away %d T-shirts.\n", s->name, remItems);
-    sleep(SLEEP_INTERVAL);
+    shirtsTaken += remItems;
   }
   mfr.itemsTaken += shirtsTaken;
   return 0;
