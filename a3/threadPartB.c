@@ -1,3 +1,9 @@
+/*
+  Assignment 3
+  threadPartA.c
+  Developer: Michael Scales
+  Operating Systems
+*/
 #define _GNU_SOURCE
 
 #include <stdio.h>
@@ -22,19 +28,27 @@ struct Salesman
   int delay;
 };
 
+/*  getShirts:
+ *    A salesman is sent to get shirts from the manufacturer.
+ *    They will get their shirts, sleep, and then put there shirts
+ *    in the items they're taking.
+ */
 void *getShirts();
 
-pthread_mutex_t mutex;
+// Global: Share with all Salespeople
 struct Manufacturer mfr;
+pthread_mutex_t mutex;
 
 int main()
 {
   mfr.itemsTaken = 0;
   mfr.items = CAPACITY;
 
+  // Salesman: integer thread id, name, percentage 
+  // of shirts to take, and integer delays
   struct Salesman s1 = { 0, 'A', 0.33, 1 };
-  struct Salesman s2 = { 0, 'B', 0.25, 2 };
-  struct Salesman s3 = { 0, 'C', 0.20, 0 };
+  struct Salesman s2 = { 0, 'B', 0.25, 1 };
+  struct Salesman s3 = { 0, 'C', 0.20, 2 };
 
   pthread_setconcurrency(3);
 
