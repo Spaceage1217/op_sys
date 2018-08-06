@@ -1,6 +1,6 @@
 /*
   Assignment 3
-  threadPartA.c
+  threadPartB.c
   Developer: Michael Scales
   Operating Systems
 */
