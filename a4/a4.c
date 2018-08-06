@@ -69,21 +69,24 @@ int runLRU(char refString[], int length)
     fault = false;
     ref = refString[i];
     printf("Checking if %d is in page table.\n", ref);
+
     for (j = 0; j < FRAMES; j++) {
       page = frameArray[j];
+
+      // If we find the page -> do nothing
       if (ref == page) {
         printf("page found\n");
         break;
       }
-      else
-      {
-        printf("not found\n");
-        // Not found -> replace
-        if (j == (FRAMES - 1)) {
-          fault = true;
-          break;
-        }
-      }
+
+      printf("not found\n");
+
+      if (j == (FRAMES - 1)) {
+        // If we haven't found the page
+        // It's not in the frames.
+        fault = true;
+        break;
+      } 
     }
     if (fault) {
       printf("replacing page\n");
