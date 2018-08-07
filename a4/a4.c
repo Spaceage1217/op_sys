@@ -22,8 +22,9 @@ struct Frame
   int pageNum;
 };
 
-int runOPT(int refString[], int length);
-int runLRU(int refString[], int length);
+int runOPT(int refString[]);
+int runLRU(int refString[]);
+int findNextIndex(const char args[], int arg, int startIdx);
 int getMaxIndex(struct Frame frames[]);
 
 int main()
@@ -33,10 +34,10 @@ int main()
   srand(time(0));
   int faultsLRU, faultsOPT, frames;
   // int refLength = rand() % MAX;
-  int refLength = 10;
-  int refString[refLength];
+  REFSTRINGLEN = 10;
+  int refString[REFSTRINGLEN];
   int i;
-  for (i = 0; i < refLength; i++)
+  for (i = 0; i < REFSTRINGLEN; i++)
     refString[i] = (int)(rand() % 5) + 1;
 
   // Get # of frames
@@ -45,10 +46,10 @@ int main()
   FRAMES = frames;
 
   // Test LRU
-  faultsLRU = runLRU(refString, refLength);
+  faultsLRU = runLRU(refString);
 
   // Test Optimal
-  faultsOPT = runOPT(refString, refLength);
+  faultsOPT = runOPT(refString);
 
   printf(
       "Optimal had: [ %d ] faults,\nand\n"
@@ -57,7 +58,7 @@ int main()
   exit(EXIT_SUCCESS);
 }
 
-int runLRU(int refString[], int length)
+int runLRU(int refString[])
 {
   // INIT
   int faults = 0,
@@ -69,11 +70,11 @@ int runLRU(int refString[], int length)
     frames[i].pageNum = -1;
 
   printf("Running LRU for reference string:\n");
-  for (i = 0; i < length; i++)
+  for (i = 0; i < REFSTRINGLEN; i++)
     printf("%d ", refString[i]);
   printf("\n");
 
-  for (i = 0; i < length; i++)
+  for (i = 0; i < REFSTRINGLEN; i++)
   {
     swap = true;
     ref = refString[i];
@@ -115,10 +116,71 @@ int runLRU(int refString[], int length)
   return faults;
 }
 
-int runOPT(int refString[], int length)
+int runOPT(int refString[])
 {
   // INIT
-  int faults = 0;
+  int faults = 0,
+      i, j, k,
+      ref;
+  bool swap;
+  struct Frame frames[FRAMES];
+  for (i = 0; i < FRAMES; i++)
+    frames[i].pageNum = -1;
+
+  printf("\nRunning OPTIMAL for reference string:\n");
+  for (i = 0; i < REFSTRINGLEN; i++)
+    printf("%d ", refString[i]);
+  printf("\n");
+
+  for (i = 0; i < REFSTRINGLEN; i++)
+  {
+    swap = true;
+    ref = refString[i];
+    printf("Checking if %d is in page table.\n", ref);
+    for (j = 0; j < FRAMES; j++)
+    {
+      if (swap && frames[j].pageNum < 0)
+      {
+        faults++;
+        swap = false;
+        frames[j].pageNum = ref;
+        printf("set empty %d\n", j);
+      }
+
+      if (frames[j].pageNum == ref) 
+      {
+        swap = false;
+        printf("found match\n");
+        break;
+      }
+    }
+    if (swap)
+    {
+      faults++;
+      int nextIdx,
+          maxIdx,
+          maxFrame;
+
+      maxIdx = maxFrame = 0;
+      for (k = 0; k < FRAMES; k++)
+      {
+        nextIdx = findNextIndex((const char*)refString, frames[k].pageNum, i);
+        printf("Highest idx for %d is %d\n", k, maxIdx);
+        printf("Current frame %d\n", k);
+        if (nextIdx > maxIdx)
+        {
+          maxIdx = nextIdx;
+          maxFrame = k;
+        }
+      }
+      frames[maxFrame].pageNum = ref;
+      printf("swapping %d %d\n", maxFrame, ref);
+      printf("looking ahead and swapping\n");
+    }
+    for (k = 0; k < FRAMES; k++)
+      printf("%d ", frames[k].pageNum);
+    printf("\n");
+  }
   return faults;
 }
 
@@ -137,4 +199,18 @@ int getMaxIndex(struct Frame frames[])
     }
   }
   return location;
+}
+
+int findNextIndex(const char args[], int arg, int startIdx)
+{
+  int i;
+  for (i = startIdx; i < REFSTRINGLEN; i++)
+  {
+    printf("%d match\n", args[i] == arg);
+    if (args[i] == arg) {
+      return i;
+    }
+  }
+  printf("return not found\n");
+  return -1;
 }
