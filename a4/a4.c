@@ -11,14 +11,20 @@
 #include <stdbool.h>
 #include <string.h>
 
-
 #define MAX 30;
 
 int FRAMES;
 int REFSTRINGLEN;
 
-int runOPT(char refString[], int length);
-int runLRU(char refString[], int length);
+struct Frame
+{
+  int timeSinceRef;
+  int pageNum;
+};
+
+int runOPT(int refString[], int length);
+int runLRU(int refString[], int length);
+int getMaxIndex(struct Frame frames[]);
 
 int main()
 {
@@ -27,8 +33,8 @@ int main()
   srand(time(0));
   int faultsLRU, faultsOPT, frames;
   // int refLength = rand() % MAX;
-  int refLength = 5;
-  char refString[refLength];
+  int refLength = 10;
+  int refString[refLength];
   int i;
   for (i = 0; i < refLength; i++)
     refString[i] = (int)(rand() % 5) + 1;
@@ -45,64 +51,90 @@ int main()
   faultsOPT = runOPT(refString, refLength);
 
   printf(
-    "Optimal had: [ %d ] faults,\nand\n"
-    "LRU had: [ %d ] faults.\n", faultsOPT, faultsLRU
-  );
+      "Optimal had: [ %d ] faults,\nand\n"
+      "LRU had: [ %d ] faults.\n",
+      faultsOPT, faultsLRU);
   exit(EXIT_SUCCESS);
 }
 
-int runLRU(char refString[], int length)
+int runLRU(int refString[], int length)
 {
   // INIT
   int faults = 0,
-      LRU = 0,
-      i, j, k;
-  char frameArray[FRAMES];
-  char ref, page;
-  bool fault;
+      i, j, k,
+      ref;
+  bool swap;
+  struct Frame frames[FRAMES];
+  for (i = 0; i < FRAMES; i++)
+    frames[i].pageNum = -1;
+
   printf("Running LRU for reference string:\n");
   for (i = 0; i < length; i++)
     printf("%d ", refString[i]);
   printf("\n");
 
-  for (i = 0; i < length; i++) {
-    fault = false;
+  for (i = 0; i < length; i++)
+  {
+    swap = true;
     ref = refString[i];
     printf("Checking if %d is in page table.\n", ref);
-
-    for (j = 0; j < FRAMES; j++) {
-      page = frameArray[j];
-
-      // If we find the page -> do nothing
-      if (ref == page) {
-        printf("page found\n");
-        break;
+    for (j = 0; j < FRAMES; j++)
+    {
+      if (swap && frames[j].pageNum == ref)
+      {
+        frames[j].timeSinceRef = 1;
+        swap = false;
+        printf("found a page\n");
       }
-
-      printf("not found\n");
-
-      if (j == (FRAMES - 1)) {
-        // If we haven't found the page
-        // It's not in the frames.
-        fault = true;
-        break;
-      } 
+      else if (swap && frames[j].pageNum < 0)
+      {
+        frames[j].pageNum = ref;
+        frames[j].timeSinceRef = 1;
+        faults++;
+        swap = false;
+        printf("set empty %d\n", j);
+      }
+      else
+      {
+        frames[j].timeSinceRef++;
+        printf("incrementing page\n");
+      }
     }
-    if (fault) {
-      printf("replacing page\n");
-      if (LRU < 3)
-        frameArray[LRU++] = ref;
-    } else printf("Page present. moving on\n");
+    if (swap)
+    {
+      printf("swapping\n");
+      k = getMaxIndex(frames);
+      frames[k].pageNum = ref;
+      frames[k].timeSinceRef = 1;
+      faults++;
+    }
     for (k = 0; k < FRAMES; k++)
-      printf("%d ", frameArray[i]);
+      printf("%d ", frames[k].pageNum);
     printf("\n");
   }
   return faults;
 }
 
-int runOPT(char refString[], int length)
+int runOPT(int refString[], int length)
 {
   // INIT
   int faults = 0;
   return faults;
+}
+
+int getMaxIndex(struct Frame frames[])
+{
+  int maximum = frames[0].timeSinceRef,
+      c,
+      location = 0;
+
+  for (c = 1; c < FRAMES; c++)
+  {
+    if (frames[c].timeSinceRef > maximum)
+    {
+      maximum = frames[c].timeSinceRef;
+      location = c;
+    }
+  }
+  return location;
 }
